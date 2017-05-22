@@ -1,23 +1,24 @@
 apply plugin: 'maven'
 apply plugin: 'signing'
 
-def sonatypeRepositoryUrl
-if (isReleaseBuild()) {
-  println 'RELEASE BUILD'
-  sonatypeRepositoryUrl = hasProperty('RELEASE_REPOSITORY_URL') ? RELEASE_REPOSITORY_URL
-      : "https://oss.sonatype.org/service/local/staging/deploy/maven2/"
-} else {
-  println 'DEBUG BUILD'
-  sonatypeRepositoryUrl = hasProperty('SNAPSHOT_REPOSITORY_URL') ? SNAPSHOT_REPOSITORY_URL
-      : "https://oss.sonatype.org/content/repositories/snapshots/"
+def isReleaseBuild() {
+  return VERSION_NAME.contains("SNAPSHOT") == false
+}
+
+def getReleaseRepositoryUrl() {
+  return "http://nexus3.rancher.fusion.one:8081/repository/maven-releases/"
+}
+
+def getSnapshotRepositoryUrl() {
+  return "http://nexus3.rancher.fusion.one:8081/repository/maven-snapshots/"
 }
 
 def getRepositoryUsername() {
-  return hasProperty('nexusUsername') ? nexusUsername : ""
+  return hasProperty('NEXUS_USERNAME') ? NEXUS_USERNAME : ""
 }
 
 def getRepositoryPassword() {
-  return hasProperty('nexusPassword') ? nexusPassword : ""
+  return hasProperty('NEXUS_PASSWORD') ? NEXUS_PASSWORD : ""
 }
 
 afterEvaluate { project ->
@@ -26,9 +27,15 @@ afterEvaluate { project ->
       mavenDeployer {
         beforeDeployment { MavenDeployment deployment -> signing.signPom(deployment) }
 
+        pom.groupId = GROUP
         pom.artifactId = POM_ARTIFACT_ID
+        pom.version = VERSION_NAME
 
-        repository(url: sonatypeRepositoryUrl) {
+        repository(url: getReleaseRepositoryUrl()) {
+          authentication(userName: getRepositoryUsername(), password: getRepositoryPassword())
+        }
+
+        snapshotRepository(url: getSnapshotRepositoryUrl()) {
           authentication(userName: getRepositoryUsername(), password: getRepositoryPassword())
         }
 
@@ -68,25 +75,12 @@ afterEvaluate { project ->
     sign configurations.archives
   }
 
-  task androidJavadocs(type: Javadoc) {
-    source = android.sourceSets.main.java.sourceFiles
-  }
-
-  task androidJavadocsJar(type: Jar) {
-    classifier = 'javadoc'
-    //basename = artifact_id
-    from androidJavadocs.destinationDir
-  }
-
   task androidSourcesJar(type: Jar) {
     classifier = 'sources'
-    //basename = artifact_id
     from android.sourceSets.main.java.sourceFiles
   }
 
   artifacts {
-    //archives packageReleaseJar
     archives androidSourcesJar
-    archives androidJavadocsJar
   }
 }
