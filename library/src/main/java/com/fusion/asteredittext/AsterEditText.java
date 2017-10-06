@@ -301,6 +301,7 @@ public class AsterEditText extends AppCompatEditText {
   private int iconPadding;
   private boolean clearButtonTouched;
   private boolean clearButtonClicking;
+  private boolean labelsTitleCase;
   private ColorStateList textColorStateList;
   private ColorStateList textColorHintStateList;
   private ArgbEvaluator focusEvaluator = new ArgbEvaluator();
@@ -394,10 +395,13 @@ public class AsterEditText extends AppCompatEditText {
       typeface = getCustomTypeface(fontPathForView);
       setTypeface(typeface);
     }
+
     floatingLabelText = typedArray.getString(R.styleable.AsterEditText_met_floatingLabelText);
-    if (floatingLabelText == null) {
-      floatingLabelText = getHint();
-    }
+    labelsTitleCase = typedArray.getBoolean(R.styleable.AsterEditText_met_labelsTitleCase, false);
+    CharSequence hintText = getHint();
+    setFloatingLabelText(floatingLabelText);
+    setHintText(hintText != null && hintText.length() > 0 ? getHint() : floatingLabelText);
+
     floatingLabelPadding = typedArray.getDimensionPixelSize(R.styleable.AsterEditText_met_floatingLabelPadding, bottomSpacing);
     floatingLabelTextSize = typedArray.getDimensionPixelSize(R.styleable.AsterEditText_met_floatingLabelTextSize, getResources().getDimensionPixelSize(R.dimen.floating_label_text_size));
     floatingLabelTextColor = typedArray.getColor(R.styleable.AsterEditText_met_floatingLabelTextColor, -1);
@@ -694,15 +698,54 @@ public class AsterEditText extends AppCompatEditText {
   }
 
   /**
-   * Set the floating label text.
+   * Set the floating label text with respect to the labelsTitleCase attribute.
    * <p/>
    * Pass null to force fallback to use hint's value.
    *
    * @param floatingLabelText
    */
   public void setFloatingLabelText(@Nullable CharSequence floatingLabelText) {
-    this.floatingLabelText = floatingLabelText == null ? getHint() : floatingLabelText;
+    if (floatingLabelText == null) {
+      this.floatingLabelText = labelsTitleCase ?  stringToTitleCase(getHint()) : getHint();
+    } else {
+      this.floatingLabelText = labelsTitleCase ? stringToTitleCase(floatingLabelText) : floatingLabelText;
+    }
     postInvalidate();
+  }
+
+  /**
+   * Set the hint text with respect to the labelsTitleCase attribute.
+   * @param hintText
+   */
+  public void setHintText(CharSequence hintText) {
+
+    setHint(labelsTitleCase ? stringToTitleCase(hintText) : hintText);
+  }
+
+
+ private String stringToTitleCase(CharSequence charSequence) {
+    if (charSequence == null) return null;
+
+    String text = charSequence.toString();
+    boolean nextLetterCaps = true;
+    StringBuilder builder = new StringBuilder(text);
+    final int len = builder.length();
+
+    for (int i = 0; i < len; ++i) {
+      char c = builder.charAt(i);
+
+      if (nextLetterCaps) {
+        if (!Character.isWhitespace(c)) {
+          builder.setCharAt(i, Character.toTitleCase(c));
+          nextLetterCaps = false;
+        }
+      }
+      else if (Character.isWhitespace(c)) {
+        nextLetterCaps = true;
+      }
+    }
+
+    return builder.toString();
   }
 
   public int getFloatingLabelTextSize() {
@@ -721,6 +764,18 @@ public class AsterEditText extends AppCompatEditText {
   public void setFloatingLabelTextColor(int color) {
     this.floatingLabelTextColor = color;
     postInvalidate();
+  }
+
+  /**
+   * Set the casing of both the floating label and hint.
+   * @param labelsTitleCase <br>true: Sets the floating label and hint to title case.<br>
+   *                        false: Sets the floating label and hint to sentence case.
+   */
+  public void setLabelsTitleCase(boolean labelsTitleCase) {
+    this.labelsTitleCase = labelsTitleCase;
+    setFloatingLabelText(floatingLabelText);
+    CharSequence hintText = getHint();
+    if (hintText != null && hintText.length() > 0) setHintText(hintText);
   }
 
   public int getBottomTextSize() {
