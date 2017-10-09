@@ -63,6 +63,9 @@
     <attr name="met_textColor" format="color" />
     <!-- Hint Text Color -->
     <attr name="met_textColorHint" format="color" />
+    <!--Hint and Floating label text casing.
+    true: title case, false: sentence case-->
+    <attr name="met_labelsTitleCase" format="boolean"/>
     <!-- Auto validate on focus lost. False by default. -->
     <attr name="met_validateOnFocusLost" format="boolean"/>
     <!-- Whether check the characters count at the beginning it's shown. True by default. -->
