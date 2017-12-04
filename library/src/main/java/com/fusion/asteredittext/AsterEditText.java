@@ -11,6 +11,7 @@ import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.Paint;
 import android.graphics.PorterDuff;
+import android.graphics.Rect;
 import android.graphics.Typeface;
 import android.graphics.drawable.Drawable;
 import android.os.Build;
@@ -315,6 +316,7 @@ public class AsterEditText extends AppCompatEditText {
   OnFocusChangeListener outerFocusChangeListener;
   private List<METValidator> validators;
   private METLengthChecker lengthChecker;
+  private String focusErrorText, focusValidationRegex;
 
   public AsterEditText(Context context) {
     super(context);
@@ -1580,4 +1582,28 @@ public class AsterEditText extends AppCompatEditText {
     if (lengthChecker==null) return text.length();
     return lengthChecker.getLength(text);
   }
+
+
+  @Override
+  protected void onFocusChanged(boolean focused, int direction, Rect previouslyFocusedRect) {
+    if (focusErrorText != null && focusValidationRegex != null) {
+      if (!getText().toString().matches(focusValidationRegex) && !focused) {
+        setError(focusErrorText);
+      } else if (hasFocus()) {
+        setError(null);
+      }
+    }
+    super.onFocusChanged(focused, direction, previouslyFocusedRect);
+  }
+
+  /**
+   * Set validation to trigger when the AsterEditText loses focus.
+   * @param focusErrorText The error text to display under the field.
+   * @param focusValidationRegex The regex statement used to validate the text from the AsterEditText.
+   */
+  public void setFocusChangedValidation(String focusErrorText, String focusValidationRegex) {
+    this.focusErrorText = focusErrorText;
+    this.focusValidationRegex = focusValidationRegex;
+  }
+
 }
