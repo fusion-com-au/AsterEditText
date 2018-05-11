@@ -1635,7 +1635,6 @@ public class AsterEditText extends AppCompatEditText {
                   break;
               case MotionEvent.ACTION_UP:
                   if (helpButtonClicking) {
-                      //TODO HERE SHOW DIALOG
                       if(helpText != null) {
                           AlertDialog.Builder builder = new AlertDialog.Builder(getContext());
 
