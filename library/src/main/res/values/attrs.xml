@@ -29,6 +29,10 @@
     <attr name="met_accentTypeface" format="string" />
     <!-- Font used on view -->
     <attr name="met_typeface" format="string" />
+    <!-- Custom help text title -->
+    <attr name="met_helpDialogTitle" format="string" />
+    <!-- Custom help text -->
+    <attr name="met_helpDialogText" format="string" />
     <!-- Custom float label text -->
     <attr name="met_floatingLabelText" format="string" />
     <!-- spacing between the main text and the floating label -->
@@ -47,6 +51,10 @@
     <attr name="met_iconPadding" format="dimension" />
     <!-- Clear button -->
     <attr name="met_clearButton" format="boolean" />
+    <!-- Help button -->
+    <attr name="met_helpButton" format="boolean" />
+    <!-- Help icon -->
+    <attr name="met_helpButtonIcon" format="reference" />
     <!-- The floating label's text size. 12sp by default. -->
     <attr name="met_floatingLabelTextSize" format="dimension" />
     <!-- The floating label's text color. -1 by default. -->
