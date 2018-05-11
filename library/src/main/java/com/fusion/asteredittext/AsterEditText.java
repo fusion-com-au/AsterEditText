@@ -1,6 +1,7 @@
 package com.fusion.asteredittext;
 
 import android.annotation.TargetApi;
+import android.app.AlertDialog;
 import android.content.Context;
 import android.content.res.ColorStateList;
 import android.content.res.Configuration;
@@ -15,10 +16,14 @@ import android.graphics.Rect;
 import android.graphics.Typeface;
 import android.graphics.drawable.Drawable;
 import android.os.Build;
+import android.support.annotation.ColorInt;
+import android.support.annotation.ColorRes;
 import android.support.annotation.DrawableRes;
 import android.support.annotation.IntDef;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
+import android.support.v4.content.ContextCompat;
+import android.support.v4.graphics.drawable.DrawableCompat;
 import android.support.v7.widget.AppCompatEditText;
 import android.text.Editable;
 import android.text.Layout;
@@ -290,11 +295,17 @@ public class AsterEditText extends AppCompatEditText {
   private Bitmap[] clearButtonBitmaps;
 
   /**
+   * Help Button
+   */
+  private Bitmap[] helpButtonBitmaps;
+
+  /**
    * Auto validate when focus lost.
    */
   private boolean validateOnFocusLost;
 
   private boolean showClearButton;
+  private boolean showHelpButton;
   private boolean firstShown;
   private int iconSize;
   private int iconOuterWidth;
@@ -302,6 +313,8 @@ public class AsterEditText extends AppCompatEditText {
   private int iconPadding;
   private boolean clearButtonTouched;
   private boolean clearButtonClicking;
+  private boolean helpButtonTouched;
+  private boolean helpButtonClicking;
   private boolean labelsTitleCase;
   private ColorStateList textColorStateList;
   private ColorStateList textColorHintStateList;
@@ -316,7 +329,7 @@ public class AsterEditText extends AppCompatEditText {
   OnFocusChangeListener outerFocusChangeListener;
   private List<METValidator> validators;
   private METLengthChecker lengthChecker;
-  private String focusErrorText, focusValidationRegex;
+  private String focusErrorText, focusValidationRegex, helpTitle, helpText;
 
   public AsterEditText(Context context) {
     super(context);
@@ -398,6 +411,9 @@ public class AsterEditText extends AppCompatEditText {
       setTypeface(typeface);
     }
 
+    helpTitle = typedArray.getString(R.styleable.AsterEditText_met_helpDialogTitle);
+    helpText = typedArray.getString(R.styleable.AsterEditText_met_helpDialogText);
+
     floatingLabelText = typedArray.getString(R.styleable.AsterEditText_met_floatingLabelText);
     labelsTitleCase = typedArray.getBoolean(R.styleable.AsterEditText_met_labelsTitleCase, false);
     CharSequence hintText = getHint();
@@ -416,6 +432,12 @@ public class AsterEditText extends AppCompatEditText {
     iconRightBitmaps = generateIconBitmaps(typedArray.getResourceId(R.styleable.AsterEditText_met_iconRight, -1));
     showClearButton = typedArray.getBoolean(R.styleable.AsterEditText_met_clearButton, false);
     clearButtonBitmaps = generateIconBitmaps(R.drawable.met_ic_clear);
+    showHelpButton = typedArray.getBoolean(R.styleable.AsterEditText_met_helpButton, false);
+    if(typedArray.hasValue(R.styleable.AsterEditText_met_helpButtonIcon)) {
+        helpButtonBitmaps = generateIconBitmaps(typedArray.getResourceId(R.styleable.AsterEditText_met_helpButtonIcon,-1));
+    }else{
+        helpButtonBitmaps = generateIconBitmaps(ContextCompat.getDrawable(getContext(),R.drawable.ic_icon_help));
+    }
     iconPadding = typedArray.getDimensionPixelSize(R.styleable.AsterEditText_met_iconPadding, getPixel(16));
     floatingLabelAlwaysShown = typedArray.getBoolean(R.styleable.AsterEditText_met_floatingLabelAlwaysShown, false);
     helperTextAlwaysShown = typedArray.getBoolean(R.styleable.AsterEditText_met_helperTextAlwaysShown, false);
@@ -534,6 +556,15 @@ public class AsterEditText extends AppCompatEditText {
 
   public void setShowClearButton(boolean show) {
     showClearButton = show;
+    correctPaddings();
+  }
+
+  public boolean isShowHelpButton() {
+    return showHelpButton;
+  }
+
+  public void setShowHelpButton(boolean show) {
+    showHelpButton = show;
     correctPaddings();
   }
 
@@ -836,17 +867,24 @@ public class AsterEditText extends AppCompatEditText {
    */
   private void correctPaddings() {
     int buttonsWidthLeft = 0, buttonsWidthRight = 0;
-    int buttonsWidth = iconOuterWidth * getButtonsCount();
     if (isRTL()) {
-      buttonsWidthLeft = buttonsWidth;
+      buttonsWidthLeft = getEnabledButtonWidth();
     } else {
-      buttonsWidthRight = buttonsWidth;
+      buttonsWidthRight = getEnabledButtonWidth();
     }
     super.setPadding(innerPaddingLeft + extraPaddingLeft + buttonsWidthLeft, innerPaddingTop + extraPaddingTop, innerPaddingRight + extraPaddingRight + buttonsWidthRight, innerPaddingBottom + extraPaddingBottom);
   }
 
+  /**
+   * Get enabled button width
+   * @return Int
+   */
+  private int getEnabledButtonWidth(){
+      return iconOuterWidth * getButtonsCount();
+  }
+
   private int getButtonsCount() {
-    return isShowClearButton() ? 1 : 0;
+    return (isShowClearButton() ? 1 : 0) + (isShowHelpButton() ? 1 : 0);
   }
 
   @Override
@@ -1359,7 +1397,7 @@ public class AsterEditText extends AppCompatEditText {
       if (isRTL()) {
         buttonLeft = startX;
       } else {
-        buttonLeft = endX - iconOuterWidth;
+        buttonLeft = endX;
       }
       Bitmap clearButtonBitmap = clearButtonBitmaps[0];
       buttonLeft += (iconOuterWidth - clearButtonBitmap.getWidth()) / 2;
@@ -1367,12 +1405,30 @@ public class AsterEditText extends AppCompatEditText {
       canvas.drawBitmap(clearButtonBitmap, buttonLeft, iconTop, paint);
     }
 
+    // draw the help button
+    if (showHelpButton && isEnabled()) {
+      paint.setAlpha(255);
+      int buttonLeft;
+      if (isRTL()) {
+        buttonLeft = startX;
+      } else {
+        buttonLeft = endX;
+      }
+      if(showClearButton){
+          buttonLeft += iconOuterWidth;
+      }
+      Bitmap helpButtonBitmap = helpButtonBitmaps[0];
+      buttonLeft += (iconOuterWidth - helpButtonBitmap.getWidth()) / 2;
+      int iconTop = lineStartY + bottomSpacing - iconOuterHeight + (iconOuterHeight - helpButtonBitmap.getHeight()) / 2;
+      canvas.drawBitmap(helpButtonBitmap, buttonLeft, iconTop, paint);
+    }
+
     // draw the underline
     if (!hideUnderline) {
       lineStartY += bottomSpacing;
       if (!isInternalValid()) { // not valid
         paint.setColor(errorColor);
-        canvas.drawRect(startX, lineStartY, endX, lineStartY + getPixel(2), paint);
+        canvas.drawRect(startX, lineStartY, endX + getEnabledButtonWidth(), lineStartY + getPixel(2), paint);
       } else if (!isEnabled()) { // disabled
         paint.setColor(underlineColor != -1 ? underlineColor : baseColor & 0x00ffffff | 0x44000000);
         float interval = getPixel(1);
@@ -1381,10 +1437,10 @@ public class AsterEditText extends AppCompatEditText {
         }
       } else if (hasFocus()) { // focused
         paint.setColor(primaryColor);
-        canvas.drawRect(startX, lineStartY, endX, lineStartY + getPixel(2), paint);
+        canvas.drawRect(startX, lineStartY, endX + getEnabledButtonWidth(), lineStartY + getPixel(2), paint);
       } else { // normal
         paint.setColor(underlineColor != -1 ? underlineColor : baseColor & 0x00ffffff | 0x1E000000);
-        canvas.drawRect(startX, lineStartY, endX, lineStartY + getPixel(1), paint);
+        canvas.drawRect(startX, lineStartY, endX + getEnabledButtonWidth(), lineStartY + getPixel(1), paint);
       }
     }
 
@@ -1437,7 +1493,7 @@ public class AsterEditText extends AppCompatEditText {
       int floatingLabelStartY = (int) (innerPaddingTop + floatingLabelTextSize + floatingLabelPadding - distance * (floatingLabelAlwaysShown ? 1 : floatingLabelFraction) + getScrollY());
 
       // calculate the alpha
-      int alpha = ((int) ((floatingLabelAlwaysShown ? 1 : floatingLabelFraction) * 0xff * (0.74f * focusFraction * (isEnabled() ? 1 : 0) + 0.26f) * (floatingLabelTextColor != -1 ? 1 : Color.alpha(floatingLabelTextColor) / 256f)));
+      int alpha = ((int) ((floatingLabelAlwaysShown ? 1 : floatingLabelFraction) * 0xff * ((0.74f * focusFraction * (isEnabled() ? 1 : 0)) + 0.26f) * (floatingLabelTextColor != -1 ? 1 : Color.alpha(floatingLabelTextColor) / 0xff)));
       textPaint.setAlpha(alpha);
 
       // draw the floating label
@@ -1560,6 +1616,51 @@ public class AsterEditText extends AppCompatEditText {
           break;
       }
     }
+
+      if (showHelpButton && isEnabled()) {
+          switch (event.getAction()) {
+              case MotionEvent.ACTION_DOWN:
+                  if (insideHelpButton(event)) {
+                      helpButtonTouched = true;
+                      helpButtonClicking = true;
+                      return true;
+                  }
+              case MotionEvent.ACTION_MOVE:
+                  if (helpButtonClicking && !insideHelpButton(event)) {
+                      helpButtonClicking = false;
+                  }
+                  if (helpButtonTouched) {
+                      return true;
+                  }
+                  break;
+              case MotionEvent.ACTION_UP:
+                  if (helpButtonClicking) {
+                      if(helpText != null) {
+                          AlertDialog.Builder builder = new AlertDialog.Builder(getContext());
+
+                          if (helpTitle != null) {
+                              builder.setTitle(helpTitle);
+                          }
+                          builder.setMessage(helpText);
+                          builder.setNegativeButton("Close", null);
+
+                          AlertDialog alertDialog = builder.create();
+                          alertDialog.show();
+                      }
+                      helpButtonClicking = false;
+                  }
+                  if (helpButtonTouched) {
+                      helpButtonTouched = false;
+                      return true;
+                  }
+                  helpButtonTouched = false;
+                  break;
+              case MotionEvent.ACTION_CANCEL:
+                  helpButtonTouched = false;
+                  helpButtonClicking = false;
+                  break;
+          }
+      }
     return super.onTouchEvent(event);
   }
 
@@ -1567,16 +1668,34 @@ public class AsterEditText extends AppCompatEditText {
     float x = event.getX();
     float y = event.getY();
     int startX = getScrollX() + (iconLeftBitmaps == null ? 0 : (iconOuterWidth + iconPadding));
-    int endX = getScrollX() + (iconRightBitmaps == null ? getWidth() : getWidth() - iconOuterWidth - iconPadding);
+    int endX = getScrollX() + (iconRightBitmaps == null ? getWidth() : getWidth() - iconOuterWidth - iconPadding) - getPaddingRight();
     int buttonLeft;
     if (isRTL()) {
       buttonLeft = startX;
     } else {
-      buttonLeft = endX - iconOuterWidth;
+      buttonLeft = endX;
     }
     int buttonTop = getScrollY() + getHeight() - getPaddingBottom() + bottomSpacing - iconOuterHeight;
     return (x >= buttonLeft && x < buttonLeft + iconOuterWidth && y >= buttonTop && y < buttonTop + iconOuterHeight);
   }
+
+    private boolean insideHelpButton(MotionEvent event) {
+        float x = event.getX();
+        float y = event.getY();
+        int startX = getScrollX() + (iconLeftBitmaps == null ? 0 : (iconOuterWidth + iconPadding));
+        int endX = getScrollX() + (iconRightBitmaps == null ? getWidth() : getWidth() - iconOuterWidth - iconPadding) - getPaddingRight();
+        int buttonLeft;
+        if (isRTL()) {
+            buttonLeft = startX;
+        } else {
+            buttonLeft = endX;
+        }
+        if(showClearButton){
+            buttonLeft += iconOuterWidth;
+        }
+        int buttonTop = getScrollY() + getHeight() - getPaddingBottom() + bottomSpacing - iconOuterHeight;
+        return (x >= buttonLeft && x < buttonLeft + iconOuterWidth && y >= buttonTop && y < buttonTop + iconOuterHeight);
+    }
 
   private int checkLength(CharSequence text) {
     if (lengthChecker==null) return text.length();

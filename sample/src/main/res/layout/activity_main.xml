@@ -105,7 +105,11 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:hint="Floating Label"
-        app:met_floatingLabel="normal" />
+          app:met_clearButton="true"
+          app:met_helpButton="true"
+          app:met_helpDialogText="THIS IS some help text to help you work out what this field is for"
+          app:met_helpDialogTitle="Help title"
+        app:met_floatingLabel="highlight" />
 
       <TextView
         android:layout_width="match_parent"
