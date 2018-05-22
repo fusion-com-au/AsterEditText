@@ -566,6 +566,7 @@ public class AsterEditText extends AppCompatEditText {
   public void setShowHelpButton(boolean show) {
     showHelpButton = show;
     correctPaddings();
+    invalidate();
   }
 
   private Bitmap[] generateIconBitmaps(@DrawableRes int origin) {
@@ -779,6 +780,27 @@ public class AsterEditText extends AppCompatEditText {
     }
 
     return builder.toString();
+  }
+
+  public void setHelpButton(@DrawableRes int res) {
+    iconLeftBitmaps = generateIconBitmaps(res);
+    postInvalidate();
+  }
+
+  public String getHelpTitle() {
+    return this.helpTitle;
+  }
+
+  public void setHelpTitle(@Nullable String helpTitle) {
+    this.helpTitle = helpTitle;;
+  }
+
+  public String getHelpText() {
+    return this.helpText;
+  }
+  
+  public void setHelpText(@Nullable String helpText) {
+    this.helpText = helpText;
   }
 
   public int getFloatingLabelTextSize() {
