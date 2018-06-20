@@ -769,7 +769,7 @@ public class AsterEditText extends AppCompatEditText {
       char c = builder.charAt(i);
 
       if (nextLetterCaps) {
-        if (!Character.isWhitespace(c)) {
+        if (Character.isLetter(c)) {
           builder.setCharAt(i, Character.toTitleCase(c));
           nextLetterCaps = false;
         }
