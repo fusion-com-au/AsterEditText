@@ -260,6 +260,11 @@ public class AsterEditText extends AppCompatEditText {
   private int underlineColor;
 
   /**
+   * Increase the underline's height in abnormal state. false by default.
+   */
+  private boolean highlightUnderline;
+
+  /**
    * Whether to validate as soon as the text has changed. False by default
    */
   private boolean autoValidate;
@@ -427,6 +432,7 @@ public class AsterEditText extends AppCompatEditText {
     bottomTextSize = typedArray.getDimensionPixelSize(R.styleable.AsterEditText_met_bottomTextSize, getResources().getDimensionPixelSize(R.dimen.bottom_text_size));
     hideUnderline = typedArray.getBoolean(R.styleable.AsterEditText_met_hideUnderline, false);
     underlineColor = typedArray.getColor(R.styleable.AsterEditText_met_underlineColor, -1);
+    highlightUnderline = typedArray.getBoolean(R.styleable.AsterEditText_met_highlightUnderline, false);
     autoValidate = typedArray.getBoolean(R.styleable.AsterEditText_met_autoValidate, false);
     iconLeftBitmaps = generateIconBitmaps(typedArray.getResourceId(R.styleable.AsterEditText_met_iconLeft, -1));
     iconRightBitmaps = generateIconBitmaps(typedArray.getResourceId(R.styleable.AsterEditText_met_iconRight, -1));
@@ -1450,7 +1456,7 @@ public class AsterEditText extends AppCompatEditText {
       lineStartY += bottomSpacing;
       if (!isInternalValid()) { // not valid
         paint.setColor(errorColor);
-        canvas.drawRect(startX, lineStartY, endX + getEnabledButtonWidth(), lineStartY + getPixel(2), paint);
+        canvas.drawRect(startX, lineStartY, endX + getEnabledButtonWidth(), lineStartY + (highlightUnderline? getPixel(2) : getPixel(1)), paint);
       } else if (!isEnabled()) { // disabled
         paint.setColor(underlineColor != -1 ? underlineColor : baseColor & 0x00ffffff | 0x44000000);
         float interval = getPixel(1);
@@ -1459,7 +1465,7 @@ public class AsterEditText extends AppCompatEditText {
         }
       } else if (hasFocus()) { // focused
         paint.setColor(primaryColor);
-        canvas.drawRect(startX, lineStartY, endX + getEnabledButtonWidth(), lineStartY + getPixel(2), paint);
+        canvas.drawRect(startX, lineStartY, endX + getEnabledButtonWidth(), lineStartY + (highlightUnderline? getPixel(2) : getPixel(1)), paint);
       } else { // normal
         paint.setColor(underlineColor != -1 ? underlineColor : baseColor & 0x00ffffff | 0x1E000000);
         canvas.drawRect(startX, lineStartY, endX + getEnabledButtonWidth(), lineStartY + getPixel(1), paint);
@@ -1514,9 +1520,7 @@ public class AsterEditText extends AppCompatEditText {
       int distance = floatingLabelPadding;
       int floatingLabelStartY = (int) (innerPaddingTop + floatingLabelTextSize + floatingLabelPadding - distance * (floatingLabelAlwaysShown ? 1 : floatingLabelFraction) + getScrollY());
 
-      // calculate the alpha
-      int alpha = ((int) ((floatingLabelAlwaysShown ? 1 : floatingLabelFraction) * 0xff * ((0.74f * focusFraction * (isEnabled() ? 1 : 0)) + 0.26f) * (floatingLabelTextColor != -1 ? 1 : Color.alpha(floatingLabelTextColor) / 0xff)));
-      textPaint.setAlpha(alpha);
+      // Remove alpha added on the floating label text
 
       // draw the floating label
       canvas.drawText(floatingLabelText.toString(), floatingLabelStartX, floatingLabelStartY, textPaint);
