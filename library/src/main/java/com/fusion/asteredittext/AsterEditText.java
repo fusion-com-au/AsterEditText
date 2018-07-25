@@ -1528,7 +1528,9 @@ public class AsterEditText extends AppCompatEditText {
       int distance = floatingLabelPadding;
       int floatingLabelStartY = (int) (innerPaddingTop + floatingLabelTextSize + floatingLabelPadding - distance * (floatingLabelAlwaysShown ? 1 : floatingLabelFraction) + getScrollY());
 
-      // Remove alpha added on the floating label text
+      // calculate alpha (remove the focusFraction which dimming the text when it is not focused)
+      int alpha = ((int) ((floatingLabelAlwaysShown ? 1 : floatingLabelFraction) * 0xff * (floatingLabelTextColor != -1 ? 1 : Color.alpha(floatingLabelTextColor) / 0xff)));
+      textPaint.setAlpha(alpha);
 
       // draw the floating label
       canvas.drawText(floatingLabelText.toString(), floatingLabelStartX, floatingLabelStartY, textPaint);
