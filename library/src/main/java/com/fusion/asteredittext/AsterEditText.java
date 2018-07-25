@@ -804,7 +804,7 @@ public class AsterEditText extends AppCompatEditText {
   public String getHelpText() {
     return this.helpText;
   }
-  
+
   public void setHelpText(@Nullable String helpText) {
     this.helpText = helpText;
   }
@@ -1499,11 +1499,19 @@ public class AsterEditText extends AppCompatEditText {
       }
     }
 
+    // set the error state text colour
+    if (!isInternalValid()) {
+        setTextColor(errorColor);
+    } else {
+        resetTextColor();
+    }
     // draw the floating label
     if (floatingLabelEnabled && !TextUtils.isEmpty(floatingLabelText)) {
       textPaint.setTextSize(floatingLabelTextSize);
       // calculate the text color
-      textPaint.setColor((Integer) focusEvaluator.evaluate(focusFraction * (isEnabled() ? 1 : 0), floatingLabelTextColor != -1 ? floatingLabelTextColor : (baseColor & 0x00ffffff | 0x44000000), primaryColor));
+      Integer floatingColour = (Integer) focusEvaluator.evaluate(focusFraction * (isEnabled() ? 1 : 0), floatingLabelTextColor != -1 ? floatingLabelTextColor : (baseColor & 0x00ffffff | 0x44000000), primaryColor);
+      // set the error state floating label colour
+      textPaint.setColor(isInternalValid()? floatingColour : errorColor);
 
       // calculate the horizontal position
       float floatingLabelWidth = textPaint.measureText(floatingLabelText.toString());
