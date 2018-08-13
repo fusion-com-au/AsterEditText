@@ -37,6 +37,7 @@ import android.util.TypedValue;
 import android.view.Gravity;
 import android.view.MotionEvent;
 import android.view.View;
+import android.view.accessibility.AccessibilityNodeInfo;
 
 import com.nineoldandroids.animation.ArgbEvaluator;
 import com.nineoldandroids.animation.ObjectAnimator;
@@ -1761,4 +1762,41 @@ public class AsterEditText extends AppCompatEditText {
     this.focusValidationRegex = focusValidationRegex;
   }
 
+  @Override
+  public void onInitializeAccessibilityNodeInfo(AccessibilityNodeInfo info) {
+    super.onInitializeAccessibilityNodeInfo(info);
+    // add extra information to accessibility
+    StringBuilder nodeInfo = new StringBuilder();
+    String separator = ", ";
+    if (!TextUtils.isEmpty(getFloatingLabelText())) {
+      nodeInfo.append(getFloatingLabelText());
+    }
+    if (!TextUtils.isEmpty(getHelpTitle())) {
+      nodeInfo.append(separator);
+      nodeInfo.append(getHelpTitle());
+    }
+    if (!TextUtils.isEmpty(getHelpText())) {
+      nodeInfo.append(separator);
+      nodeInfo.append(getHelpText());
+    }
+    // add error text or helper text (if shown on the bottom)
+    if (!TextUtils.isEmpty(getError())) {
+      nodeInfo.append(separator);
+      nodeInfo.append(getError());
+    } else if ((hasFocus() || isHelperTextAlwaysShown()) && !TextUtils.isEmpty(getHelperText())) {
+      nodeInfo.append(separator);
+      nodeInfo.append(getHelperText());
+    }
+    // add character count info (if shown on the bottom)
+    if ((hasFocus() && hasCharactersCounter()) || !isCharactersCountValid()) {
+      nodeInfo.append(separator);
+      nodeInfo.append(getCharactersCounterText().replace("/", "out of"));
+    }
+    if (!TextUtils.isEmpty(getText())) {
+      nodeInfo.append(separator);
+      nodeInfo.append(getText());
+    }
+
+    info.setText(nodeInfo);
+  }
 }
