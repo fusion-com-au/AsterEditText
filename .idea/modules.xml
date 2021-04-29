@@ -2,9 +2,9 @@
 <project version="4">
   <component name="ProjectModuleManager">
     <modules>
-      <module fileurl="file://$PROJECT_DIR$/AsterEditText.iml" filepath="$PROJECT_DIR$/AsterEditText.iml" />
-      <module fileurl="file://$PROJECT_DIR$/library/library.iml" filepath="$PROJECT_DIR$/library/library.iml" />
-      <module fileurl="file://$PROJECT_DIR$/sample/sample.iml" filepath="$PROJECT_DIR$/sample/sample.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/AsterEditText.iml" filepath="$PROJECT_DIR$/.idea/modules/AsterEditText.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/library/AsterEditText.library.iml" filepath="$PROJECT_DIR$/.idea/modules/library/AsterEditText.library.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/sample/AsterEditText.sample.iml" filepath="$PROJECT_DIR$/.idea/modules/sample/AsterEditText.sample.iml" />
     </modules>
   </component>
 </project>
